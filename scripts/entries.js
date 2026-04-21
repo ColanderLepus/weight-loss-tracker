@@ -129,20 +129,46 @@ function renderEntries() {
     const tr = document.createElement("tr");
     tr.className = "border-b border-slate-200/70";
     const isLockedStart = entry.id === "__setup_start__";
-    const actionCell = isLockedStart
-      ? '<span class="rounded-md bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200">Setup only</span>'
-      : `<div class="flex gap-2">
-            <button data-action="edit" data-entry-id="${entry.id}" class="rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-700">Edit</button>
-            <button data-action="delete" data-entry-id="${entry.id}" class="rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-rose-500">Delete</button>
-          </div>`;
 
-    tr.innerHTML = `
-        <td class="px-4 py-3">${formatDate(entry.date)}</td>
-        <td class="px-4 py-3 font-semibold">${entry.weight.toFixed(2)} kg</td>
-        <td class="px-4 py-3">
-          ${actionCell}
-        </td>
-      `;
+    const dateCell = document.createElement("td");
+    dateCell.className = "px-4 py-3";
+    dateCell.textContent = formatDate(entry.date);
+
+    const weightCell = document.createElement("td");
+    weightCell.className = "px-4 py-3 font-semibold";
+    weightCell.textContent = `${entry.weight.toFixed(2)} kg`;
+
+    const actionCell = document.createElement("td");
+    actionCell.className = "px-4 py-3";
+
+    if (isLockedStart) {
+      const badge = document.createElement("span");
+      badge.className = "rounded-md bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200";
+      badge.textContent = "Setup only";
+      actionCell.append(badge);
+    } else {
+      const buttonGroup = document.createElement("div");
+      buttonGroup.className = "flex gap-2";
+
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.dataset.action = "edit";
+      editButton.dataset.entryId = entry.id;
+      editButton.className = "rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-700";
+      editButton.textContent = "Edit";
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.dataset.action = "delete";
+      deleteButton.dataset.entryId = entry.id;
+      deleteButton.className = "rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-rose-500";
+      deleteButton.textContent = "Delete";
+
+      buttonGroup.append(editButton, deleteButton);
+      actionCell.append(buttonGroup);
+    }
+
+    tr.append(dateCell, weightCell, actionCell);
     rows.append(tr);
   });
 }

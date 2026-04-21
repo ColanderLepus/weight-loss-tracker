@@ -135,6 +135,8 @@ function renderChart(data) {
 
   const hasRange = Boolean(rangeStart && rangeEnd && rangeEnd >= rangeStart);
   const rangeDates = hasRange ? buildDateRange(rangeStart, rangeEnd) : data.entries.map((entry) => entry.date);
+  const tickIntervalDays = getWeeklyTickIntervalDays(rangeDates.length);
+  const shouldAutoSkipTicks = rangeDates.length > 366;
 
   const labels = rangeDates.map((date) => formatChartDate(date));
   const entryMap = new Map(data.entries.map((entry) => [entry.date, entry.weight]));
@@ -193,12 +195,15 @@ function renderChart(data) {
           },
           ticks: {
             color: "#475569",
-            autoSkip: false,
+            autoSkip: shouldAutoSkipTicks,
+            maxTicksLimit: shouldAutoSkipTicks ? 28 : undefined,
             maxRotation: 45,
             minRotation: 0,
             callback: function (_value, index) {
-              // Show start date (index 0) and every 7th day after
-              if (index === 0 || index % 7 === 0) {
+              if (shouldAutoSkipTicks) {
+                return labels[index];
+              }
+              if (index === 0 || index % tickIntervalDays === 0) {
                 return labels[index];
               }
               return "";
@@ -295,6 +300,14 @@ function utcDayNumberToIsoDate(dayNumber) {
   const month = String(utcDate.getUTCMonth() + 1).padStart(2, "0");
   const day = String(utcDate.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function getWeeklyTickIntervalDays(totalDays) {
+  // Use week-only label steps so the timeline matches weekly check-in habits and remains easy to scan at any range.
+  const targetVisibleLabels = 14;
+  const rawStepDays = Math.ceil(totalDays / targetVisibleLabels);
+  const stepWeeks = Math.min(4, Math.max(1, Math.ceil(rawStepDays / 7)));
+  return stepWeeks * 7;
 }
 
 function buildTargetDataset(profile, rangeDates) {

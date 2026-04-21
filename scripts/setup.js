@@ -101,16 +101,16 @@ saveSetupBtn.addEventListener("click", async () => {
     targetWeight: Number(profile.targetWeight.toFixed(2))
   };
 
-  await saveData();
-  setStatus("Setup saved.");
-});
-
-async function saveData() {
   try {
-    await writeData(fileHandle, data);
+    await saveData();
+    setStatus("Setup saved.");
   } catch (error) {
     setStatus(error.message || "Save failed.", true);
   }
+});
+
+async function saveData() {
+  await writeData(fileHandle, data);
 }
 
 function fillProfile(profile) {

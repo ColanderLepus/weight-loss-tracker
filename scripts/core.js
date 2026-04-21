@@ -17,7 +17,11 @@ export const DEFAULT_DATA = {
 };
 
 export function supportsFileSystemAccess() {
-  return "showOpenFilePicker" in window && "showSaveFilePicker" in window;
+  return (
+    window.isSecureContext &&
+    "showOpenFilePicker" in window &&
+    "showSaveFilePicker" in window
+  );
 }
 
 export async function connectExistingFile() {

@@ -1,0 +1,352 @@
+import {
+  supportsFileSystemAccess,
+  getSavedHandle,
+  loadData,
+  isProfileComplete,
+  localDateYmd,
+  daysBetweenIsoDates,
+  buildIsoDateRange
+} from "./core.js";
+
+const chartCanvas = document.querySelector("#weight-chart");
+const chartContainer = chartCanvas?.parentElement;
+const statGoal = document.querySelector("#stat-goal");
+const statProgress = document.querySelector("#stat-progress");
+const statPace = document.querySelector("#stat-pace");
+const PACE_THRESHOLD_KG = 0.1;
+const LEGEND_BOTTOM_GAP = 12;
+
+let chart = null;
+
+const legendBottomGapPlugin = {
+  id: "legendBottomGap",
+  beforeInit(chartInstance) {
+    const originalFit = chartInstance.legend.fit;
+    chartInstance.legend.fit = function fit() {
+      originalFit.call(this);
+      this.height += LEGEND_BOTTOM_GAP;
+    };
+  }
+};
+
+init().catch(handleInitError);
+
+async function init() {
+  if (!supportsFileSystemAccess()) {
+    showChartMessage("This browser does not support File System Access API. Use Edge or Chrome.");
+    return;
+  }
+
+  const fileHandle = await getSavedHandle();
+  if (!fileHandle) {
+    showChartMessage("No connected data file. Open Setup to connect or create data.json.");
+    return;
+  }
+
+  const data = await loadData(fileHandle);
+  renderStats(data);
+  renderChart(data);
+}
+
+function handleInitError(error) {
+  console.error("Chart page initialization failed:", error);
+  resetStats();
+
+  const errorMessage = error instanceof Error ? error.message : String(error ?? "");
+  const normalizedMessage = errorMessage.toLowerCase();
+  const isDataFileError =
+    normalizedMessage.includes("file") ||
+    normalizedMessage.includes("data") ||
+    normalizedMessage.includes("load");
+
+  const userMessage = isDataFileError
+    ? "Could not load data file. Reconnect it from Setup."
+    : `Could not initialize chart${errorMessage ? `: ${errorMessage}` : "."}`;
+
+  showChartMessage(userMessage);
+}
+
+function resetStats() {
+  statGoal.textContent = "—";
+  statProgress.textContent = "—";
+  statPace.textContent = "—";
+  setPaceCardTone(statPace.parentElement, "neutral");
+}
+
+function showChartMessage(message) {
+  if (!chartContainer) {
+    return;
+  }
+
+  chartContainer.innerHTML = "";
+  const note = document.createElement("p");
+  note.className = "mt-2 text-sm text-slate-300";
+  note.textContent = message;
+  chartContainer.append(note);
+}
+
+function renderStats(data) {
+  const actualSeries = getActualSeries(data);
+  const { profile } = data;
+  const { startDate, targetDate, startWeight, targetWeight } = profile;
+  const hasGoalWeights = Number.isFinite(startWeight) && Number.isFinite(targetWeight);
+  const hasCompleteProfile = isProfileComplete(profile);
+  const paceCard = statPace.parentElement;
+
+  // Goal: Start → Target
+  if (hasGoalWeights) {
+    statGoal.textContent = `${startWeight.toFixed(2)} → ${targetWeight.toFixed(2)} kg`;
+  } else {
+    statGoal.textContent = "—";
+  }
+
+  // Progress & Remaining
+  if (hasGoalWeights && actualSeries.length >= 2) {
+    const current = actualSeries[actualSeries.length - 1].weight;
+    const delta = Number((current - startWeight).toFixed(2));
+    const remaining = Number(Math.abs(targetWeight - current).toFixed(2));
+    const sign = delta <= 0 ? "" : "+";
+    statProgress.textContent = `${sign}${delta.toFixed(2)} kg / ${remaining.toFixed(2)} to go`;
+  } else if (hasGoalWeights && actualSeries.length === 1) {
+    const remaining = Number(Math.abs(targetWeight - startWeight).toFixed(2));
+    statProgress.textContent = `${remaining.toFixed(2)} kg to go`;
+  } else {
+    statProgress.textContent = "—";
+  }
+
+  // Ahead/Behind plan
+  if (hasGoalWeights && hasCompleteProfile && actualSeries.length >= 2) {
+    const today = localDateYmd();
+    const current = actualSeries[actualSeries.length - 1].weight;
+
+    const totalDaysRaw = daysBetweenIsoDates(startDate, targetDate);
+    const elapsedDaysRaw = daysBetweenIsoDates(startDate, today);
+
+    if (!Number.isFinite(totalDaysRaw) || !Number.isFinite(elapsedDaysRaw)) {
+      statPace.textContent = "—";
+      setPaceCardTone(paceCard, "neutral");
+      return;
+    }
+
+    const totalDays = Math.max(1, totalDaysRaw);
+    const elapsedDays = Math.max(0, elapsedDaysRaw);
+    const progress = Math.min(1, elapsedDays / totalDays);
+
+    const goalDelta = targetWeight - startWeight;
+    const expectedWeight = startWeight + goalDelta * progress;
+    const aheadBehind = Number((expectedWeight - current).toFixed(2));
+    
+    if (aheadBehind > PACE_THRESHOLD_KG) {
+      statPace.textContent = `${aheadBehind.toFixed(2)} kg ahead`;
+      setPaceCardTone(paceCard, "ahead");
+    } else if (aheadBehind < -PACE_THRESHOLD_KG) {
+      statPace.textContent = `${Math.abs(aheadBehind).toFixed(2)} kg behind`;
+      setPaceCardTone(paceCard, "behind");
+    } else {
+      statPace.textContent = "On track";
+      setPaceCardTone(paceCard, "neutral");
+    }
+  } else {
+    statPace.textContent = "—";
+    setPaceCardTone(paceCard, "neutral");
+  }
+}
+
+function renderChart(data) {
+  const hasActualData = getActualSeries(data).length > 0;
+
+  if (!hasActualData) {
+    if (chart) {
+      chart.destroy();
+      chart = null;
+    }
+    return;
+  }
+
+  const firstEntryDate = data.entries.length ? data.entries[0].date : "";
+  const lastEntryDate = data.entries.length ? data.entries[data.entries.length - 1].date : "";
+
+  const hasSetupStartPoint = Boolean(
+    data.profile.startDate && Number.isFinite(data.profile.startWeight)
+  );
+
+  const rangeStart = data.profile.startDate || firstEntryDate;
+  const rangeEnd = data.profile.targetDate || lastEntryDate;
+  const hasRange = Boolean(rangeStart && rangeEnd && rangeEnd >= rangeStart);
+  const fallbackRangeDates = [...new Set([
+    ...data.entries.map((entry) => entry.date),
+    ...(hasSetupStartPoint ? [data.profile.startDate] : [])
+  ])].sort();
+  const rangeDates = hasRange ? buildIsoDateRange(rangeStart, rangeEnd) : fallbackRangeDates;
+  const tickIntervalDays = getWeeklyTickIntervalDays(rangeDates.length);
+  const shouldAutoSkipTicks = rangeDates.length > 366;
+  const labels = rangeDates.map((date) => formatChartDate(date));
+  const entryMap = new Map(data.entries.map((entry) => [entry.date, entry.weight]));
+  if (hasSetupStartPoint) {
+    entryMap.set(data.profile.startDate, Number(data.profile.startWeight));
+  }
+  const values = rangeDates.map((date) => (entryMap.has(date) ? entryMap.get(date) : null));
+  const targetDataset = buildTargetDataset(data.profile, rangeDates);
+
+  const datasets = [
+    {
+      label: "Actual Weight",
+      data: values,
+      borderColor: "#0f766e",
+      backgroundColor: "rgba(15, 118, 110, 0.16)",
+      borderWidth: 3,
+      tension: 0.25,
+      fill: true,
+      pointRadius: 2,
+      pointHoverRadius: 4
+    },
+    ...(targetDataset ? [targetDataset] : [])
+  ];
+
+  if (chart) {
+    chart.destroy();
+    chart = null;
+  }
+
+  chart = new Chart(chartCanvas, {
+    type: "line",
+    plugins: [legendBottomGapPlugin],
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            usePointStyle: true,
+            padding: 18
+          }
+        },
+        tooltip: {
+          filter: function (context) {
+            return context.dataset.label !== "Target Path"; // Exclude Target Path from tooltips
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: "#475569",
+            autoSkip: shouldAutoSkipTicks,
+            maxTicksLimit: shouldAutoSkipTicks ? 28 : undefined,
+            maxRotation: 45,
+            minRotation: 0,
+            callback: function (_value, index) {
+              if (shouldAutoSkipTicks) {
+                return labels[index];
+              }
+              if (index === 0 || index % tickIntervalDays === 0) {
+                return labels[index];
+              }
+              return "";
+            }
+          }
+        },
+        y: {
+          grid: {
+            display: true,
+            color: "rgba(148, 163, 184, 0.22)",
+            drawBorder: false
+          },
+          ticks: {
+            color: "#475569"
+          },
+          beginAtZero: false
+        }
+      }
+    }
+  });
+}
+
+function getActualSeries(data) {
+  const byDate = new Map(data.entries.map((entry) => [entry.date, entry.weight]));
+
+  if (data.profile.startDate && Number.isFinite(data.profile.startWeight)) {
+    byDate.set(data.profile.startDate, Number(data.profile.startWeight));
+  }
+
+  return [...byDate.entries()]
+    .map(([date, weight]) => ({ date, weight }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function formatChartDate(dateString) {
+  const date = new Date(`${dateString}T00:00:00`);
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short"
+  }).format(date);
+}
+
+function setPaceCardTone(card, tone) {
+  card.classList.remove("bg-slate-800/60", "bg-emerald-900/40", "bg-rose-900/40");
+
+  if (tone === "ahead") {
+    card.classList.add("bg-emerald-900/40");
+    return;
+  }
+
+  if (tone === "behind") {
+    card.classList.add("bg-rose-900/40");
+    return;
+  }
+
+  card.classList.add("bg-slate-800/60");
+}
+
+function getWeeklyTickIntervalDays(totalDays) {
+  // Use week-only label steps so the timeline matches weekly check-in habits and remains easy to scan at any range.
+  const targetVisibleLabels = 14;
+  const rawStepDays = Math.ceil(totalDays / targetVisibleLabels);
+  const stepWeeks = Math.min(4, Math.max(1, Math.ceil(rawStepDays / 7)));
+  return stepWeeks * 7;
+}
+
+function buildTargetDataset(profile, rangeDates) {
+  if (!isProfileComplete(profile) || !rangeDates.length) {
+    return null;
+  }
+
+  const targetLine = rangeDates.map(() => null);
+  const startIndex = rangeDates.findIndex((date) => date === profile.startDate);
+  const endIndex = rangeDates.findIndex((date) => date === profile.targetDate);
+
+  if (startIndex < 0 || endIndex < 0 || endIndex < startIndex) {
+    return null;
+  }
+
+  if (endIndex === startIndex) {
+    targetLine[startIndex] = profile.startWeight;
+  } else {
+    const totalSteps = endIndex - startIndex;
+    const delta = profile.targetWeight - profile.startWeight;
+
+    for (let i = startIndex; i <= endIndex; i += 1) {
+      const progress = (i - startIndex) / totalSteps;
+      const interpolated = profile.startWeight + delta * progress;
+      targetLine[i] = Number(interpolated.toFixed(2));
+    }
+  }
+
+  return {
+    label: "Target Path",
+    data: targetLine,
+    borderColor: "rgba(190, 18, 60, 0.6)", // Reduced saturation
+    borderWidth: 2,
+    borderDash: [8, 6],
+    pointRadius: 0, // No data point popups
+    pointHoverRadius: 0, // No hover effect
+    tension: 0
+  };
+}

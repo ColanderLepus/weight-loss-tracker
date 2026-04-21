@@ -12,6 +12,7 @@ const form = document.querySelector("#entry-form");
 const dateInput = document.querySelector("#entry-date");
 const weightInput = document.querySelector("#entry-weight");
 const rows = document.querySelector("#entry-rows");
+const formSection = form.closest("section");
 
 const todayISO = new Date().toISOString().split("T")[0];
 dateInput.value = todayISO;
@@ -21,6 +22,7 @@ let datePicker = null;
 let fileHandle = null;
 let data = null;
 let saveTimer = null;
+let saveErrorBanner = null;
 const submitButton = form.querySelector("button[type='submit']");
 
 init().catch(handleInitError);
@@ -194,10 +196,36 @@ function queueSave() {
   saveTimer = setTimeout(async () => {
     try {
       await writeData(fileHandle, data);
+      clearSaveError();
     } catch (error) {
-      // silently fail
+      console.error("Saving entries failed:", error);
+      showSaveError("Could not save changes to the connected file. Reconnect from Setup and try again.");
     }
   }, 180);
+}
+
+function showSaveError(message) {
+  connectBtn.classList.remove("hidden");
+
+  if (!formSection) {
+    return;
+  }
+
+  if (!saveErrorBanner) {
+    saveErrorBanner = document.createElement("div");
+    saveErrorBanner.className = "mt-3 rounded-xl border border-rose-400/70 bg-rose-950/60 px-3 py-2 text-sm text-rose-100";
+    saveErrorBanner.setAttribute("role", "status");
+    formSection.append(saveErrorBanner);
+  }
+
+  saveErrorBanner.textContent = message;
+}
+
+function clearSaveError() {
+  if (saveErrorBanner) {
+    saveErrorBanner.remove();
+    saveErrorBanner = null;
+  }
 }
 
 function getDisplayEntries() {

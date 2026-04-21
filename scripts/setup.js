@@ -26,7 +26,9 @@ let targetDatePicker = null;
 let fileHandle = null;
 let data = null;
 
-init().catch((error) => setStatus(error.message, true));
+init().catch((error) =>
+  setStatus(String(error?.message || error || "Initialization failed."), true)
+);
 
 async function init() {
   initDatePickers();

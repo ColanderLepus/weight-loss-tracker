@@ -57,12 +57,7 @@ Small local web app for tracking weight loss with a single `data.json` file.
 
 ## Run locally
 
-The File System Access API used by this app generally requires a secure context, so do not open `index.html` directly via `file://`.
-
-1. From this project folder, start a simple local web server. For example:
-  ```bash
-  python -m http.server 8000
-  ```
+1. From this project folder, start a simple local web server. For example: ```bash python -m http.server 8000```
 2. Open `http://localhost:8000/index.html` in Edge or Chrome.
 3. Open Setup and connect/create `data.json`.
 4. Save your goal setup.

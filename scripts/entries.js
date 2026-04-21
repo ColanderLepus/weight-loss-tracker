@@ -50,11 +50,13 @@ async function init() {
   renderEntries();
 }
 
-function handleInitError() {
+function handleInitError(error) {
+  console.error("Entries page initialization failed:", error);
   data = null;
   connectBtn.classList.remove("hidden");
   submitButton.disabled = true;
-  showInitMessage("Could not load saved data file. Reconnect it from Setup.");
+  const details = error && typeof error.message === "string" ? ` (${error.message})` : "";
+  showInitMessage(`Could not load saved data file. Reconnect it from Setup.${details}`);
 }
 
 function showInitMessage(message) {

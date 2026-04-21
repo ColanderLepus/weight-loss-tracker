@@ -64,7 +64,7 @@ openBtn.addEventListener("click", async () => {
     fileNameText.textContent = fileHandle.name || "data.json";
     setStatus("Existing file connected.");
   } catch (error) {
-    setStatus(error.message || "Could not open file.", true);
+    setStatus(error?.message || String(error || "Could not open file."), true);
   }
 });
 
@@ -76,7 +76,7 @@ createBtn.addEventListener("click", async () => {
     fileNameText.textContent = fileHandle.name || "data.json";
     setStatus("New data.json created and connected.");
   } catch (error) {
-    setStatus(error.message || "Could not create file.", true);
+    setStatus(error?.message || String(error || "Could not create file."), true);
   }
 });
 
@@ -110,7 +110,7 @@ saveSetupBtn.addEventListener("click", async () => {
     await saveData();
     setStatus("Setup saved.");
   } catch (error) {
-    setStatus(error.message || "Save failed.", true);
+    setStatus(error?.message || String(error || "Save failed."), true);
   }
 });
 

@@ -6,6 +6,7 @@ import {
 } from "./core.js";
 
 const chartCanvas = document.querySelector("#weight-chart");
+const chartContainer = chartCanvas?.parentElement;
 const statGoal = document.querySelector("#stat-goal");
 const statProgress = document.querySelector("#stat-progress");
 const statPace = document.querySelector("#stat-pace");
@@ -26,21 +27,48 @@ const legendBottomGapPlugin = {
   }
 };
 
-init().catch(() => {});
+init().catch(handleInitError);
 
 async function init() {
   if (!supportsFileSystemAccess()) {
+    showChartMessage("This browser does not support File System Access API. Use Edge or Chrome.");
     return;
   }
 
   const fileHandle = await getSavedHandle();
   if (!fileHandle) {
+    showChartMessage("No connected data file. Open Setup to connect or create data.json.");
     return;
   }
 
   const data = await loadData(fileHandle);
   renderStats(data);
   renderChart(data);
+}
+
+function handleInitError(error) {
+  console.error("Chart page initialization failed:", error);
+  resetStats();
+  showChartMessage("Could not load data file. Reconnect it from Setup.");
+}
+
+function resetStats() {
+  statGoal.textContent = "—";
+  statProgress.textContent = "—";
+  statPace.textContent = "—";
+  setPaceCardTone(statPace.parentElement, "neutral");
+}
+
+function showChartMessage(message) {
+  if (!chartContainer) {
+    return;
+  }
+
+  chartContainer.innerHTML = "";
+  const note = document.createElement("p");
+  note.className = "mt-2 text-sm text-slate-300";
+  note.textContent = message;
+  chartContainer.append(note);
 }
 
 function renderStats(data) {

@@ -162,8 +162,8 @@ function initDatePickers() {
 function setStatus(text, isError = false) {
   status.textContent = text;
   status.className = isError
-    ? "rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700"
-    : "rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700";
+    ? "mt-3 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+    : "mt-3 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700";
 }
 
 function disableControls(disabled) {

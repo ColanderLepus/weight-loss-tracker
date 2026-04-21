@@ -52,6 +52,13 @@ export async function createDataFile() {
   });
 
   await ensureReadWritePermission(handle);
+
+  const selectedFile = await handle.getFile();
+  const selectedText = await selectedFile.text();
+  if (selectedText.trim()) {
+    throw new Error("Selected file already contains data. Use Open Existing File to connect it.");
+  }
+
   await writeData(handle, DEFAULT_DATA);
   await saveHandle(handle);
   return handle;

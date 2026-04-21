@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weight Tracker - Entries</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Sora", "Segoe UI", "sans-serif"],
+              display: ["Fraunces", "serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="../styles/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/default.js"></script>
+    <script type="module" src="../scripts/entries.js" defer></script>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100">
+    <div class="aurora"></div>
+    <main class="relative mx-auto max-w-5xl px-4 py-6 sm:px-6">
+      <header class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="font-display text-3xl sm:text-4xl">Weight Entries</h1>
+        </div>
+        <nav class="flex flex-wrap gap-2">
+          <a href="setup.html" class="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold hover:bg-slate-700">Setup</a>
+          <a href="entries.html" class="rounded-xl bg-teal-400 px-3 py-2 text-sm font-semibold text-slate-900">Entries</a>
+          <a href="chart.html" class="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold hover:bg-slate-700">Chart</a>
+        </nav>
+      </header>
+
+      <section class="mb-5 rounded-2xl border border-slate-700/60 bg-slate-900/70 p-5 shadow-2xl shadow-black/30 backdrop-blur">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <h2 class="text-xl font-semibold">Add / Update Entry</h2>
+          <a id="go-setup-btn" href="setup.html" class="hidden rounded-xl bg-fuchsia-400 px-3 py-2 text-sm font-semibold text-slate-900">Go to Setup</a>
+        </div>
+        <form id="entry-form" class="mt-4 grid gap-3 md:grid-cols-4">
+          <div>
+            <label class="mb-1 block text-sm text-slate-300" for="entry-date">Date</label>
+            <input id="entry-date" type="date" class="field" required />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm text-slate-300" for="entry-weight">Weight (kg)</label>
+            <input id="entry-weight" type="number" min="1" step="0.01" class="field" required />
+          </div>
+          <div class="md:col-span-3">
+            <button type="submit" class="rounded-xl bg-emerald-400 px-3.5 py-2 font-semibold text-slate-900 hover:bg-emerald-300">Save Entry</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/70 shadow-2xl shadow-black/30 backdrop-blur">
+        <table class="min-w-full border-collapse">
+          <thead class="bg-slate-800/70 text-left text-sm text-slate-300">
+            <tr>
+              <th class="px-4 py-3">Date</th>
+              <th class="px-4 py-3">Weight</th>
+              <th class="px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="entry-rows" class="text-sm"></tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>

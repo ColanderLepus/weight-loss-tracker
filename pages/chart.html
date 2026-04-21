@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weight Tracker - Chart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Sora", "Segoe UI", "sans-serif"],
+              display: ["Fraunces", "serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="../scripts/chart-page.js" defer></script>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100">
+    <div class="aurora"></div>
+    <main class="relative mx-auto max-w-5xl px-4 py-6 sm:px-6">
+      <header class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="font-display text-3xl sm:text-4xl">Progress Chart</h1>
+        </div>
+        <nav class="flex flex-wrap gap-2">
+          <a href="setup.html" class="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold hover:bg-slate-700">Setup</a>
+          <a href="entries.html" class="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold hover:bg-slate-700">Entries</a>
+          <a href="chart.html" class="rounded-xl bg-teal-400 px-3 py-2 text-sm font-semibold text-slate-900">Chart</a>
+        </nav>
+      </header>
+
+      <section class="rounded-2xl border border-slate-700/60 bg-slate-900/70 p-5 shadow-2xl shadow-black/30 backdrop-blur">
+        <div class="mb-5 grid gap-5 md:grid-cols-3">
+          <div id="card-goal" class="rounded-xl border border-slate-700/50 bg-slate-800/60 p-4">
+            <p class="text-xs uppercase tracking-widest text-slate-400">Goal</p>
+            <p id="stat-goal" class="mt-2 text-lg font-semibold text-teal-300">—</p>
+          </div>
+          <div id="card-progress" class="rounded-xl border border-slate-700/50 bg-slate-800/60 p-4">
+            <p class="text-xs uppercase tracking-widest text-slate-400">Progress</p>
+            <p id="stat-progress" class="mt-2 text-lg font-semibold text-teal-300">—</p>
+          </div>
+          <div id="card-pace" class="rounded-xl border border-slate-700/50 bg-slate-800/60 p-4">
+            <p class="text-xs uppercase tracking-widest text-slate-400">Plan Status</p>
+            <p id="stat-pace" class="mt-2 text-lg font-semibold text-teal-300">—</p>
+          </div>
+        </div>
+        <div class="h-[520px] w-full rounded-xl border border-slate-700/70 bg-slate-950/40 p-3">
+          <canvas id="weight-chart" aria-label="Weight chart"></canvas>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weight Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Sora", "Segoe UI", "sans-serif"],
+              display: ["Fraunces", "serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles/styles.css" />
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100">
+    <div class="aurora"></div>
+    <main class="relative mx-auto flex min-h-screen max-w-5xl items-center px-4 py-10 sm:px-6">
+      <section class="w-full rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/30 backdrop-blur">
+        <p class="text-xs uppercase tracking-[0.2em] text-teal-300">Small Local Tool</p>
+        <h1 class="mt-2 font-display text-4xl sm:text-5xl">Weight Loss Tracker</h1>
+        <p class="mt-4 max-w-2xl text-slate-300">
+          Three-page local app with automatic save to your chosen data.json using File System Access API.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="pages/setup.html" class="rounded-xl bg-teal-400 px-4 py-2.5 font-semibold text-slate-900 hover:bg-teal-300">Start Setup</a>
+          <a href="pages/entries.html" class="rounded-xl bg-slate-800 px-4 py-2.5 font-semibold hover:bg-slate-700">Go to Entries</a>
+          <a href="pages/chart.html" class="rounded-xl bg-slate-800 px-4 py-2.5 font-semibold hover:bg-slate-700">Open Chart</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

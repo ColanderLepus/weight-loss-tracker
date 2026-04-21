@@ -102,7 +102,7 @@ function renderStats(data) {
 
   // Ahead/Behind plan
   if (hasGoalWeights && hasCompleteProfile && actualSeries.length >= 2) {
-    const today = toIsoDate(new Date());
+    const today = new Date().toISOString().split("T")[0];
     const current = actualSeries[actualSeries.length - 1].weight;
 
     const totalDaysRaw = daysBetween(startDate, targetDate);
@@ -272,13 +272,6 @@ function buildDateRange(startDate, endDate) {
   }
 
   return result;
-}
-
-function toIsoDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 function formatChartDate(dateString) {

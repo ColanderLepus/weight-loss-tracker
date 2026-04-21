@@ -99,14 +99,11 @@ function renderStats(data) {
 
   // Ahead/Behind plan
   if (actualSeries.length >= 2 && data.profile.targetDate) {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toIsoDate(new Date());
     const current = actualSeries[actualSeries.length - 1].weight;
-    const startDate = new Date(`${data.profile.startDate}T00:00:00`);
-    const targetDate = new Date(`${data.profile.targetDate}T00:00:00`);
-    const todayDate = new Date(`${today}T00:00:00`);
-    
-    const totalDays = Math.max(1, daysBetween(startDate, targetDate));
-    const elapsedDays = Math.max(0, daysBetween(startDate, todayDate));
+
+    const totalDays = Math.max(1, daysBetween(data.profile.startDate, data.profile.targetDate));
+    const elapsedDays = Math.max(0, daysBetween(data.profile.startDate, today));
     const progress = Math.min(1, elapsedDays / totalDays);
 
     const goalDelta = targetWeight - startWeight;
@@ -242,12 +239,11 @@ function getActualSeries(data) {
 
 function buildDateRange(startDate, endDate) {
   const result = [];
-  const cursor = new Date(`${startDate}T00:00:00`);
-  const end = new Date(`${endDate}T00:00:00`);
+  const startDay = isoDateToUtcDayNumber(startDate);
+  const endDay = isoDateToUtcDayNumber(endDate);
 
-  while (cursor <= end) {
-    result.push(toIsoDate(cursor));
-    cursor.setDate(cursor.getDate() + 1);
+  for (let day = startDay; day <= endDay; day += 1) {
+    result.push(utcDayNumberToIsoDate(day));
   }
 
   return result;
@@ -285,7 +281,20 @@ function setPaceCardTone(card, tone) {
 }
 
 function daysBetween(startDate, endDate) {
-  return (endDate - startDate) / MS_PER_DAY;
+  return isoDateToUtcDayNumber(endDate) - isoDateToUtcDayNumber(startDate);
+}
+
+function isoDateToUtcDayNumber(isoDate) {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return Math.floor(Date.UTC(year, month - 1, day) / MS_PER_DAY);
+}
+
+function utcDayNumberToIsoDate(dayNumber) {
+  const utcDate = new Date(dayNumber * MS_PER_DAY);
+  const year = utcDate.getUTCFullYear();
+  const month = String(utcDate.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(utcDate.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function buildTargetDataset(profile, rangeDates) {

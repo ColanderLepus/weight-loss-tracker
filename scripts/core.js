@@ -2,6 +2,7 @@ const DB_NAME = "weight-tracker-fs";
 const STORE_NAME = "handles";
 const HANDLE_KEY = "data-file-handle";
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const CUMULATIVE_DAYS_BY_MONTH = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 
 export const DEFAULT_DATA = {
   version: 1,
@@ -75,7 +76,7 @@ export async function writeData(handle, data) {
   const writable = await handle.createWritable();
   const payload = {
     ...normalizeData(data),
-    updatedAt: new Date().toISOString()
+    updatedAt: localDateYmd()
   };
   await writable.write(JSON.stringify(payload, null, 2));
   await writable.close();
@@ -120,20 +121,18 @@ export function createEntryId(date) {
 }
 
 function isIsoDateString(value) {
-  if (!ISO_DATE_PATTERN.test(value)) {
-    return false;
-  }
-
-  const utcDate = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(utcDate.getTime()) && utcDate.toISOString().slice(0, 10) === value;
+  return parseIsoDateParts(value) !== null;
 }
 
 export function formatDate(dateString) {
-  const date = new Date(`${dateString}T00:00:00`);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
+  const parts = parseIsoDateParts(dateString);
+  if (!parts) {
+    return dateString;
+  }
+
+  const day = String(parts.day).padStart(2, "0");
+  const month = String(parts.month).padStart(2, "0");
+  return `${day}-${month}-${parts.year}`;
 }
 
 export function localDateYmd(date = new Date()) {
@@ -141,6 +140,57 @@ export function localDateYmd(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+export function daysBetweenIsoDates(startDate, endDate) {
+  const startParts = parseIsoDateParts(startDate);
+  const endParts = parseIsoDateParts(endDate);
+
+  if (!startParts || !endParts) {
+    return NaN;
+  }
+
+  const startDayNumber = toDayNumber(startParts.year, startParts.month, startParts.day);
+  const endDayNumber = toDayNumber(endParts.year, endParts.month, endParts.day);
+  return endDayNumber - startDayNumber;
+}
+
+export function buildIsoDateRange(startDate, endDate) {
+  const startParts = parseIsoDateParts(startDate);
+  const endParts = parseIsoDateParts(endDate);
+
+  if (!startParts || !endParts) {
+    return [];
+  }
+
+  const startDayNumber = toDayNumber(startParts.year, startParts.month, startParts.day);
+  const endDayNumber = toDayNumber(endParts.year, endParts.month, endParts.day);
+
+  if (endDayNumber < startDayNumber) {
+    return [];
+  }
+
+  const result = [];
+  let year = startParts.year;
+  let month = startParts.month;
+  let day = startParts.day;
+
+  for (let dayNumber = startDayNumber; dayNumber <= endDayNumber; dayNumber += 1) {
+    result.push(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+    day += 1;
+
+    if (day > daysInMonth(year, month)) {
+      day = 1;
+      month += 1;
+
+      if (month > 12) {
+        month = 1;
+        year += 1;
+      }
+    }
+  }
+
+  return result;
 }
 
 export function isProfileComplete(profile) {
@@ -216,4 +266,64 @@ function promisifyRequest(request) {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
+}
+
+function parseIsoDateParts(value) {
+  if (!ISO_DATE_PATTERN.test(value)) {
+    return null;
+  }
+
+  const [yearText, monthText, dayText] = value.split("-");
+  const year = Number.parseInt(yearText, 10);
+  const month = Number.parseInt(monthText, 10);
+  const day = Number.parseInt(dayText, 10);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return null;
+  }
+
+  if (month < 1 || month > 12) {
+    return null;
+  }
+
+  if (day < 1 || day > daysInMonth(year, month)) {
+    return null;
+  }
+
+  return { year, month, day };
+}
+
+function daysInMonth(year, month) {
+  if (month === 2) {
+    return isLeapYear(year) ? 29 : 28;
+  }
+
+  if (month === 4 || month === 6 || month === 9 || month === 11) {
+    return 30;
+  }
+
+  return 31;
+}
+
+function isLeapYear(year) {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+function toDayNumber(year, month, day) {
+  const yearsBefore = year - 1;
+  const leapDaysBeforeYear =
+    Math.floor(yearsBefore / 4) - Math.floor(yearsBefore / 100) + Math.floor(yearsBefore / 400);
+  const daysBeforeYear = yearsBefore * 365 + leapDaysBeforeYear;
+
+  const dayOfYearBase = CUMULATIVE_DAYS_BY_MONTH[month - 1];
+  const leapOffset = month > 2 && isLeapYear(year) ? 1 : 0;
+  const dayOfYear = dayOfYearBase + leapOffset + day;
+
+  const epochYear = 1970;
+  const epochYearsBefore = epochYear - 1;
+  const epochLeapDays =
+    Math.floor(epochYearsBefore / 4) - Math.floor(epochYearsBefore / 100) + Math.floor(epochYearsBefore / 400);
+  const daysBeforeEpoch = epochYearsBefore * 365 + epochLeapDays;
+
+  return daysBeforeYear + dayOfYear - (daysBeforeEpoch + 1);
 }

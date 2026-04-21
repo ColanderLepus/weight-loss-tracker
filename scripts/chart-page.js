@@ -3,7 +3,9 @@ import {
   getSavedHandle,
   loadData,
   isProfileComplete,
-  localDateYmd
+  localDateYmd,
+  daysBetweenIsoDates,
+  buildIsoDateRange
 } from "./core.js";
 
 const chartCanvas = document.querySelector("#weight-chart");
@@ -11,7 +13,6 @@ const chartContainer = chartCanvas?.parentElement;
 const statGoal = document.querySelector("#stat-goal");
 const statProgress = document.querySelector("#stat-progress");
 const statPace = document.querySelector("#stat-pace");
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const PACE_THRESHOLD_KG = 0.1;
 const LEGEND_BOTTOM_GAP = 12;
 
@@ -106,8 +107,8 @@ function renderStats(data) {
     const today = localDateYmd();
     const current = actualSeries[actualSeries.length - 1].weight;
 
-    const totalDaysRaw = daysBetween(startDate, targetDate);
-    const elapsedDaysRaw = daysBetween(startDate, today);
+    const totalDaysRaw = daysBetweenIsoDates(startDate, targetDate);
+    const elapsedDaysRaw = daysBetweenIsoDates(startDate, today);
 
     if (!Number.isFinite(totalDaysRaw) || !Number.isFinite(elapsedDaysRaw)) {
       statPace.textContent = "—";
@@ -157,7 +158,7 @@ function renderChart(data) {
   const rangeEnd = data.profile.targetDate || lastEntryDate;
 
   const hasRange = Boolean(rangeStart && rangeEnd && rangeEnd >= rangeStart);
-  const rangeDates = hasRange ? buildDateRange(rangeStart, rangeEnd) : data.entries.map((entry) => entry.date);
+  const rangeDates = hasRange ? buildIsoDateRange(rangeStart, rangeEnd) : data.entries.map((entry) => entry.date);
   const tickIntervalDays = getWeeklyTickIntervalDays(rangeDates.length);
   const shouldAutoSkipTicks = rangeDates.length > 366;
 
@@ -262,19 +263,6 @@ function getActualSeries(data) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function buildDateRange(startDate, endDate) {
-  const result = [];
-  const startMs = new Date(startDate + "T00:00:00Z").getTime();
-  const endMs = new Date(endDate + "T00:00:00Z").getTime();
-
-  for (let ms = startMs; ms <= endMs; ms += MS_PER_DAY) {
-    const isoDate = new Date(ms).toISOString().split('T')[0];
-    result.push(isoDate);
-  }
-
-  return result;
-}
-
 function formatChartDate(dateString) {
   const date = new Date(`${dateString}T00:00:00`);
   return new Intl.DateTimeFormat("en-GB", {
@@ -297,12 +285,6 @@ function setPaceCardTone(card, tone) {
   }
 
   card.classList.add("bg-slate-800/60");
-}
-
-function daysBetween(startDate, endDate) {
-  const startMs = new Date(startDate + "T00:00:00Z").getTime();
-  const endMs = new Date(endDate + "T00:00:00Z").getTime();
-  return Math.floor((endMs - startMs) / MS_PER_DAY);
 }
 
 function getWeeklyTickIntervalDays(totalDays) {

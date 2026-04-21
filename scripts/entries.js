@@ -267,5 +267,6 @@ function initDatePicker() {
     }
   });
 
+  const todayISO = localDateYmd();
   datePicker.setDate(todayISO, true, "Y-m-d");
 }

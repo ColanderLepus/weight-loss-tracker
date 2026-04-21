@@ -1,6 +1,7 @@
 const DB_NAME = "weight-tracker-fs";
 const STORE_NAME = "handles";
 const HANDLE_KEY = "data-file-handle";
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export const DEFAULT_DATA = {
   version: 1,
@@ -94,6 +95,8 @@ export function normalizeData(input) {
           (entry) =>
             typeof entry?.id === "string" &&
             typeof entry?.date === "string" &&
+            entry.id === entry.date &&
+            isIsoDateString(entry.date) &&
             Number.isFinite(entry?.weight)
         )
         .map((entry) => ({
@@ -114,6 +117,15 @@ export function normalizeData(input) {
 
 export function createEntryId(date) {
   return date;
+}
+
+function isIsoDateString(value) {
+  if (!ISO_DATE_PATTERN.test(value)) {
+    return false;
+  }
+
+  const utcDate = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(utcDate.getTime()) && utcDate.toISOString().slice(0, 10) === value;
 }
 
 export function formatDate(dateString) {

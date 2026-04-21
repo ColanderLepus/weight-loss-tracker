@@ -22,6 +22,7 @@ let datePicker = null;
 let fileHandle = null;
 let data = null;
 let saveTimer = null;
+let saveQueue = Promise.resolve();
 let saveErrorBanner = null;
 const submitButton = form.querySelector("button[type='submit']");
 
@@ -39,10 +40,13 @@ async function init() {
   fileHandle = await getSavedHandle();
   if (!fileHandle) {
     connectBtn.classList.remove("hidden");
+    submitButton.disabled = true;
+    showInitMessage("No connected data file. Open Setup and connect or create data.json.");
     return;
   }
 
   data = await loadData(fileHandle);
+  submitButton.disabled = false;
   renderEntries();
 }
 
@@ -194,14 +198,21 @@ function queueSave() {
     clearTimeout(saveTimer);
   }
 
-  saveTimer = setTimeout(async () => {
-    try {
-      await writeData(fileHandle, data);
-      clearSaveError();
-    } catch (error) {
-      console.error("Saving entries failed:", error);
-      showSaveError("Could not save changes to the connected file. Reconnect from Setup and try again.");
+  saveTimer = setTimeout(() => {
+    if (!fileHandle || !data) {
+      return;
     }
+
+    const snapshot = structuredClone(data);
+    saveQueue = saveQueue.then(async () => {
+      try {
+        await writeData(fileHandle, snapshot);
+        clearSaveError();
+      } catch (error) {
+        console.error("Saving entries failed:", error);
+        showSaveError("Could not save changes to the connected file. Reconnect from Setup and try again.");
+      }
+    });
   }, 180);
 }
 

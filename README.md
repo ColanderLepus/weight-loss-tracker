@@ -46,7 +46,7 @@ Small local web app for tracking weight loss with a single `data.json` file.
   "entries": [
     { "id": "2026-04-20", "date": "2026-04-20", "weight": 93.7 }
   ],
-  "updatedAt": "2026-04-21T10:15:30.000Z"
+  "updatedAt": "2026-04-21"
 }
 ```
 

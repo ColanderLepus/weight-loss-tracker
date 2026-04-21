@@ -23,7 +23,7 @@ const legendBottomGapPlugin = {
   beforeInit(chartInstance) {
     const originalFit = chartInstance.legend.fit;
     chartInstance.legend.fit = function fit() {
-      originalFit.bind(this)();
+      originalFit.call(this);
       this.height += LEGEND_BOTTOM_GAP;
     };
   }
@@ -154,17 +154,23 @@ function renderChart(data) {
   const firstEntryDate = data.entries.length ? data.entries[0].date : "";
   const lastEntryDate = data.entries.length ? data.entries[data.entries.length - 1].date : "";
 
+  const hasSetupStartPoint = Boolean(
+    data.profile.startDate && Number.isFinite(data.profile.startWeight)
+  );
+
   const rangeStart = data.profile.startDate || firstEntryDate;
   const rangeEnd = data.profile.targetDate || lastEntryDate;
-
   const hasRange = Boolean(rangeStart && rangeEnd && rangeEnd >= rangeStart);
-  const rangeDates = hasRange ? buildIsoDateRange(rangeStart, rangeEnd) : data.entries.map((entry) => entry.date);
+  const fallbackRangeDates = [...new Set([
+    ...data.entries.map((entry) => entry.date),
+    ...(hasSetupStartPoint ? [data.profile.startDate] : [])
+  ])].sort();
+  const rangeDates = hasRange ? buildIsoDateRange(rangeStart, rangeEnd) : fallbackRangeDates;
   const tickIntervalDays = getWeeklyTickIntervalDays(rangeDates.length);
   const shouldAutoSkipTicks = rangeDates.length > 366;
-
   const labels = rangeDates.map((date) => formatChartDate(date));
   const entryMap = new Map(data.entries.map((entry) => [entry.date, entry.weight]));
-  if (data.profile.startDate && Number.isFinite(data.profile.startWeight)) {
+  if (hasSetupStartPoint) {
     entryMap.set(data.profile.startDate, Number(data.profile.startWeight));
   }
   const values = rangeDates.map((date) => (entryMap.has(date) ? entryMap.get(date) : null));

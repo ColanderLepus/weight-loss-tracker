@@ -244,11 +244,12 @@ function getActualSeries(data) {
 
 function buildDateRange(startDate, endDate) {
   const result = [];
-  const startDay = isoDateToUtcDayNumber(startDate);
-  const endDay = isoDateToUtcDayNumber(endDate);
+  const startMs = new Date(startDate + "T00:00:00Z").getTime();
+  const endMs = new Date(endDate + "T00:00:00Z").getTime();
 
-  for (let day = startDay; day <= endDay; day += 1) {
-    result.push(utcDayNumberToIsoDate(day));
+  for (let ms = startMs; ms <= endMs; ms += MS_PER_DAY) {
+    const isoDate = new Date(ms).toISOString().split('T')[0];
+    result.push(isoDate);
   }
 
   return result;
@@ -286,20 +287,9 @@ function setPaceCardTone(card, tone) {
 }
 
 function daysBetween(startDate, endDate) {
-  return isoDateToUtcDayNumber(endDate) - isoDateToUtcDayNumber(startDate);
-}
-
-function isoDateToUtcDayNumber(isoDate) {
-  const [year, month, day] = isoDate.split("-").map(Number);
-  return Math.floor(Date.UTC(year, month - 1, day) / MS_PER_DAY);
-}
-
-function utcDayNumberToIsoDate(dayNumber) {
-  const utcDate = new Date(dayNumber * MS_PER_DAY);
-  const year = utcDate.getUTCFullYear();
-  const month = String(utcDate.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(utcDate.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const startMs = new Date(startDate + "T00:00:00Z").getTime();
+  const endMs = new Date(endDate + "T00:00:00Z").getTime();
+  return Math.floor((endMs - startMs) / MS_PER_DAY);
 }
 
 function getWeeklyTickIntervalDays(totalDays) {

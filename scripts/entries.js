@@ -4,7 +4,8 @@ import {
   loadData,
   writeData,
   createEntryId,
-  formatDate
+  formatDate,
+  localDateYmd
 } from "./core.js";
 
 const connectBtn = document.querySelector("#go-setup-btn");
@@ -14,8 +15,7 @@ const weightInput = document.querySelector("#entry-weight");
 const rows = document.querySelector("#entry-rows");
 const formSection = form.closest("section");
 
-const todayISO = new Date().toISOString().split("T")[0];
-dateInput.value = todayISO;
+dateInput.value = localDateYmd();
 
 let datePicker = null;
 
@@ -90,6 +90,7 @@ form.addEventListener("submit", (event) => {
   queueSave();
 
   form.reset();
+  const todayISO = localDateYmd();
   if (datePicker) {
     datePicker.setDate(todayISO, true, "Y-m-d");
   } else {

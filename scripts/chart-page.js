@@ -2,7 +2,8 @@ import {
   supportsFileSystemAccess,
   getSavedHandle,
   loadData,
-  isProfileComplete
+  isProfileComplete,
+  localDateYmd
 } from "./core.js";
 
 const chartCanvas = document.querySelector("#weight-chart");
@@ -102,7 +103,7 @@ function renderStats(data) {
 
   // Ahead/Behind plan
   if (hasGoalWeights && hasCompleteProfile && actualSeries.length >= 2) {
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateYmd();
     const current = actualSeries[actualSeries.length - 1].weight;
 
     const totalDaysRaw = daysBetween(startDate, targetDate);

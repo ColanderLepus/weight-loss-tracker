@@ -63,7 +63,7 @@ function renderStats(data) {
     const sign = delta <= 0 ? "" : "+";
     statProgress.textContent = `${sign}${delta.toFixed(2)} kg / ${remaining.toFixed(2)} to go`;
   } else if (actualSeries.length === 1) {
-    const remaining = Number((targetWeight - startWeight).toFixed(2));
+    const remaining = Number(Math.abs(targetWeight - startWeight).toFixed(2));
     statProgress.textContent = `${remaining.toFixed(2)} kg to go`;
   } else {
     statProgress.textContent = "—";

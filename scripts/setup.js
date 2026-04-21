@@ -59,7 +59,7 @@ async function init() {
 openBtn.addEventListener("click", async () => {
   try {
     fileHandle = await connectExistingFile();
-    data = normalizeData(await loadData(fileHandle));
+    data = await loadData(fileHandle);
     fillProfile(data.profile);
     fileNameText.textContent = fileHandle.name || "data.json";
     setStatus("Existing file connected.");
@@ -71,7 +71,7 @@ openBtn.addEventListener("click", async () => {
 createBtn.addEventListener("click", async () => {
   try {
     fileHandle = await createDataFile();
-    data = normalizeData(await loadData(fileHandle));
+    data = await loadData(fileHandle);
     fillProfile(data.profile);
     fileNameText.textContent = fileHandle.name || "data.json";
     setStatus("New data.json created and connected.");

@@ -51,7 +51,19 @@ async function init() {
 function handleInitError(error) {
   console.error("Chart page initialization failed:", error);
   resetStats();
-  showChartMessage("Could not load data file. Reconnect it from Setup.");
+
+  const errorMessage = error instanceof Error ? error.message : String(error ?? "");
+  const normalizedMessage = errorMessage.toLowerCase();
+  const isDataFileError =
+    normalizedMessage.includes("file") ||
+    normalizedMessage.includes("data") ||
+    normalizedMessage.includes("load");
+
+  const userMessage = isDataFileError
+    ? "Could not load data file. Reconnect it from Setup."
+    : `Could not initialize chart${errorMessage ? `: ${errorMessage}` : "."}`;
+
+  showChartMessage(userMessage);
 }
 
 function resetStats() {

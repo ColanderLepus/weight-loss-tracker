@@ -60,7 +60,16 @@ function handleInitError(error) {
 }
 
 function showInitMessage(message) {
-  rows.innerHTML = `<tr><td colspan="3" class="px-4 py-4 text-rose-600">${message}</td></tr>`;
+  rows.replaceChildren();
+
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = 3;
+  cell.className = "px-4 py-4 text-rose-600";
+  cell.textContent = message;
+
+  row.append(cell);
+  rows.append(row);
 }
 
 form.addEventListener("submit", (event) => {

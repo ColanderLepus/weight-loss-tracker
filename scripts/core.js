@@ -84,9 +84,9 @@ export async function writeData(handle, data) {
 
 export function normalizeData(input) {
   const safeProfile = {
-    startDate: typeof input?.profile?.startDate === "string" ? input.profile.startDate : "",
+    startDate: typeof input?.profile?.startDate === "string" && isIsoDateString(input.profile.startDate) ? input.profile.startDate : "",
     startWeight: Number.isFinite(input?.profile?.startWeight) ? input.profile.startWeight : null,
-    targetDate: typeof input?.profile?.targetDate === "string" ? input.profile.targetDate : "",
+    targetDate: typeof input?.profile?.targetDate === "string" && isIsoDateString(input.profile.targetDate) ? input.profile.targetDate : "",
     targetWeight: Number.isFinite(input?.profile?.targetWeight) ? input.profile.targetWeight : null
   };
 

@@ -73,8 +73,10 @@ function showChartMessage(message) {
 
 function renderStats(data) {
   const actualSeries = getActualSeries(data);
-  const { startWeight, targetWeight } = data.profile;
+  const { profile } = data;
+  const { startDate, targetDate, startWeight, targetWeight } = profile;
   const hasGoalWeights = Number.isFinite(startWeight) && Number.isFinite(targetWeight);
+  const hasCompleteProfile = isProfileComplete(profile);
   const paceCard = statPace.parentElement;
 
   // Goal: Start → Target
@@ -99,12 +101,21 @@ function renderStats(data) {
   }
 
   // Ahead/Behind plan
-  if (hasGoalWeights && actualSeries.length >= 2 && data.profile.targetDate) {
+  if (hasGoalWeights && hasCompleteProfile && actualSeries.length >= 2) {
     const today = toIsoDate(new Date());
     const current = actualSeries[actualSeries.length - 1].weight;
 
-    const totalDays = Math.max(1, daysBetween(data.profile.startDate, data.profile.targetDate));
-    const elapsedDays = Math.max(0, daysBetween(data.profile.startDate, today));
+    const totalDaysRaw = daysBetween(startDate, targetDate);
+    const elapsedDaysRaw = daysBetween(startDate, today);
+
+    if (!Number.isFinite(totalDaysRaw) || !Number.isFinite(elapsedDaysRaw)) {
+      statPace.textContent = "—";
+      setPaceCardTone(paceCard, "neutral");
+      return;
+    }
+
+    const totalDays = Math.max(1, totalDaysRaw);
+    const elapsedDays = Math.max(0, elapsedDaysRaw);
     const progress = Math.min(1, elapsedDays / totalDays);
 
     const goalDelta = targetWeight - startWeight;

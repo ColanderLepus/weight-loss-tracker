@@ -74,23 +74,24 @@ function showChartMessage(message) {
 function renderStats(data) {
   const actualSeries = getActualSeries(data);
   const { startWeight, targetWeight } = data.profile;
+  const hasGoalWeights = Number.isFinite(startWeight) && Number.isFinite(targetWeight);
   const paceCard = statPace.parentElement;
 
   // Goal: Start → Target
-  if (Number.isFinite(startWeight) && Number.isFinite(targetWeight)) {
+  if (hasGoalWeights) {
     statGoal.textContent = `${startWeight.toFixed(2)} → ${targetWeight.toFixed(2)} kg`;
   } else {
     statGoal.textContent = "—";
   }
 
   // Progress & Remaining
-  if (actualSeries.length >= 2) {
+  if (hasGoalWeights && actualSeries.length >= 2) {
     const current = actualSeries[actualSeries.length - 1].weight;
     const delta = Number((current - startWeight).toFixed(2));
     const remaining = Number(Math.abs(targetWeight - current).toFixed(2));
     const sign = delta <= 0 ? "" : "+";
     statProgress.textContent = `${sign}${delta.toFixed(2)} kg / ${remaining.toFixed(2)} to go`;
-  } else if (actualSeries.length === 1) {
+  } else if (hasGoalWeights && actualSeries.length === 1) {
     const remaining = Number(Math.abs(targetWeight - startWeight).toFixed(2));
     statProgress.textContent = `${remaining.toFixed(2)} kg to go`;
   } else {
@@ -98,7 +99,7 @@ function renderStats(data) {
   }
 
   // Ahead/Behind plan
-  if (actualSeries.length >= 2 && data.profile.targetDate) {
+  if (hasGoalWeights && actualSeries.length >= 2 && data.profile.targetDate) {
     const today = toIsoDate(new Date());
     const current = actualSeries[actualSeries.length - 1].weight;
 

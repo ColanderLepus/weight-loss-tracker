@@ -127,6 +127,16 @@ function renderStats(data) {
 }
 
 function renderChart(data) {
+  const hasActualData = getActualSeries(data).length > 0;
+
+  if (!hasActualData) {
+    if (chart) {
+      chart.destroy();
+      chart = null;
+    }
+    return;
+  }
+
   const firstEntryDate = data.entries.length ? data.entries[0].date : "";
   const lastEntryDate = data.entries.length ? data.entries[data.entries.length - 1].date : "";
 
@@ -163,6 +173,7 @@ function renderChart(data) {
 
   if (chart) {
     chart.destroy();
+    chart = null;
   }
 
   chart = new Chart(chartCanvas, {
@@ -224,10 +235,6 @@ function renderChart(data) {
       }
     }
   });
-
-  if (!getActualSeries(data).length) {
-    chart.destroy();
-  }
 }
 
 function getActualSeries(data) {

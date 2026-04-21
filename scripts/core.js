@@ -157,6 +157,10 @@ export function profileValidationError(profile) {
     return "Start date, start weight, target date, and target weight are required.";
   }
 
+  if (profile.startWeight <= 0 || profile.targetWeight <= 0) {
+    return "Start weight and target weight must be greater than 0.";
+  }
+
   if (profile.targetDate <= profile.startDate) {
     return "Target date must be after start date.";
   }

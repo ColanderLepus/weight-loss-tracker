@@ -21,14 +21,16 @@ let datePicker = null;
 let fileHandle = null;
 let data = null;
 let saveTimer = null;
+const submitButton = form.querySelector("button[type='submit']");
 
-init().catch(() => {});
+init().catch(handleInitError);
 
 async function init() {
   initDatePicker();
 
   if (!supportsFileSystemAccess()) {
-    form.querySelector("button[type='submit']").disabled = true;
+    submitButton.disabled = true;
+    showInitMessage("This browser does not support File System Access API. Use Edge or Chrome.");
     return;
   }
 
@@ -40,6 +42,17 @@ async function init() {
 
   data = await loadData(fileHandle);
   renderEntries();
+}
+
+function handleInitError() {
+  data = null;
+  connectBtn.classList.remove("hidden");
+  submitButton.disabled = true;
+  showInitMessage("Could not load saved data file. Reconnect it from Setup.");
+}
+
+function showInitMessage(message) {
+  rows.innerHTML = `<tr><td colspan="3" class="px-4 py-4 text-rose-600">${message}</td></tr>`;
 }
 
 form.addEventListener("submit", (event) => {

@@ -110,7 +110,8 @@ saveSetupBtn.addEventListener("click", async () => {
     await saveData();
     setStatus("Setup saved.");
   } catch (error) {
-    setStatus(error?.message || String(error || "Save failed."), true);
+    const message = error?.message || String(error || "Save failed.");
+    setStatus(message, true);
   }
 });
 

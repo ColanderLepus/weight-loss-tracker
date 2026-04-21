@@ -46,6 +46,9 @@ async function init() {
       fileNameText.textContent = fileHandle.name || "data.json";
       setStatus("Connected to data file.");
     } catch {
+      fileHandle = null;
+      data = null;
+      fileNameText.textContent = "none";
       setStatus("Saved file handle needs reconnect. Click Open Existing File.", true);
     }
   }

@@ -2,7 +2,7 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Runs on pushes targeting the main branch
   push:
     branches: ["main"]
 
@@ -36,7 +36,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Upload the site directory
           path: './site'
       - name: Deploy to GitHub Pages
         id: deployment

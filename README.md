@@ -1,8 +1,8 @@
-# Weight Loss Tracker (v1)
+# Weight Loss Tracker
 
-Small local web app for tracking weight loss with a single `data.json` file.
+Web app for tracking weight loss with a single `data.json` file. Deployed to GitHub Pages.
 
-## What v1 includes
+## Features
 
 - Three-page flow: Setup, Entries, Chart
 - File-based persistence using the File System Access API
@@ -55,13 +55,10 @@ Small local web app for tracking weight loss with a single `data.json` file.
 - Recommended: latest desktop Microsoft Edge or Google Chrome
 - Other browsers may not support File System Access API
 
-## Run locally
+## How to use
 
-1. From this project folder, start a simple local web server. For example, run `python -m http.server 8000`.
-2. Open `http://localhost:8000/index.html` in Edge or Chrome.
-3. Open Setup and connect/create `data.json`.
-4. Save your goal setup.
-5. Use Entries to log weight.
-6. Use Chart to review progress.
-
-You can also host the folder on an HTTPS static host such as GitHub Pages, then open the hosted URL in a supported browser.
+1. Open the app at https://colanderlepus.github.io/weight-loss-tracker/
+2. Open Setup and connect/create `data.json`.
+3. Save your goal setup.
+4. Use Entries to log weight.
+5. Use Chart to review progress.
